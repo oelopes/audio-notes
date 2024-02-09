@@ -1,5 +1,3 @@
-const App = () => (
-  <div>hi</div>
+export const App = () => (
+  <div className="text-3xl font-bold underline">hi</div>
 )
-
-export default App
