@@ -20,7 +20,7 @@ export const App = () => {
           <p className="text-sm leading-6 text-slate-400">Grave uma nota em áudio que será convertida para texto automaticamente.</p>
         </div>
 
-        <NoteCard />
+        <NoteCard date={new Date()} content='blalbvasloa odsak dosakdoaskodka' />
       </div>
     </div>
   )
