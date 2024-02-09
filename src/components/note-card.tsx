@@ -5,6 +5,7 @@ import { X } from "lucide-react"
 
 type BaseNoteProps = {
   children: React.ReactNode
+  primary?: boolean
 }
 
 type NoteCardProps = {
@@ -12,11 +13,12 @@ type NoteCardProps = {
   content: string
 }
 
-const NoteTrigger = ({children}: BaseNoteProps) => (
-    <Dialog.Trigger className="rounded-md flex flex-col text-left bg-slate-800 p-5 gap-3 overflow-hidden relative outline-none hover:ring-2 hover:ring-slate-600 focus-visible:ring-2 focus-visible:ring-cyan-400">
+const NoteTrigger = ({children, primary = false}: BaseNoteProps) => (
+    <Dialog.Trigger className={`
+      rounded-md flex flex-col text-left p-5 gap-3 overflow-hidden relative outline-none hover:ring-2 hover:ring-slate-600 focus-visible:ring-2 focus-visible:ring-cyan-400
+      ${primary ? 'bg-slate-700' : 'bg-slate-800' }
+    `}>
       {children}
-
-      <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/60 to-black/0 pointer-events-none" />
     </Dialog.Trigger>
 )
 
@@ -41,6 +43,8 @@ export const NoteCard = ({date, content}: NoteCardProps) =>  (
       <span className="text-sm font-medium text-slate-500">{formatDistanceToNow(date, { locale: ptBR, addSuffix: true})}</span>
 
       <p className="text-sm leading-6 text-slate-400">{content}</p>
+
+      <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/60 to-black/0 pointer-events-none" />
     </NoteTrigger>
     <NoteContent>
       <div className="flex flex-1 flex-col gap-3 p-5">
@@ -59,11 +63,11 @@ export const NoteCard = ({date, content}: NoteCardProps) =>  (
 export const NewNoteCard = () => {
   return (
     <Dialog.Root>
-      <NoteTrigger>
+      <NoteTrigger primary>
         <span className="text-sm font-medium text-slate-500">Adicionar nota</span>
 
         <p className="text-sm leading-6 text-slate-400">
-          Comece <button className="text-cyan-400 font-medium hover:underline">gravando uma nota</button> em áudio ou se preferir utilize <button className="text-cyan-400 font-medium hover:underline">apenas texto</button>
+          Grave uma nota em áudio que será transcrita para texto automaticamente
         </p>
       </NoteTrigger>
       <NoteContent>
