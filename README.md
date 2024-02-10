@@ -16,7 +16,7 @@ npm run dev
 
 ## Deployed on Vercel
 
-[https://htmx-test.onrender.com/](https://audio-notes-xi.vercel.app/)
+[https://audio-notes-xi.vercel.app/](https://audio-notes-xi.vercel.app/)
 
 ## License
 
