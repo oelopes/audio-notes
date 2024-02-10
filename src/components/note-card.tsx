@@ -5,6 +5,8 @@ import { X } from "lucide-react"
 import { ChangeEvent, FormEvent, useState } from "react"
 import { toast } from "sonner"
 
+import { TNote } from "../types/notes"
+
 type BaseNoteProps = {
   children: React.ReactNode
   primary?: boolean
@@ -12,8 +14,12 @@ type BaseNoteProps = {
 }
 
 type NoteCardProps = {
-  date: Date
-  content: string
+  data: TNote
+  onNoteDeletion: (noteId: string) => void
+}
+
+type NewNoteCardProps = {
+  onNoteCreation: (note: TNote) => void
 }
 
 const NoteTrigger = ({children, primary = false}: BaseNoteProps) => (
@@ -40,49 +46,61 @@ const NoteContent = ({children, onClose}: BaseNoteProps) => (
     </Dialog.Portal>
 )
 
-export const NoteCard = ({date, content}: NoteCardProps) =>  (
+export const NoteCard = ({data, onNoteDeletion}: NoteCardProps) =>  (
   <Dialog.Root>
     <NoteTrigger>
-      <span className="text-sm font-medium text-slate-500">{formatDistanceToNow(date, { locale: ptBR, addSuffix: true})}</span>
+      <span className="text-sm font-medium text-slate-500">{formatDistanceToNow(data.date, { locale: ptBR, addSuffix: true})}</span>
 
-      <p className="text-sm leading-6 text-slate-400">{content}</p>
+      <p className="text-sm leading-6 text-slate-400">{data.content}</p>
 
       <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/60 to-black/0 pointer-events-none" />
     </NoteTrigger>
     <NoteContent>
       <div className="flex flex-1 flex-col gap-3 p-5">
-        <span className="text-sm font-medium text-slate-500">{formatDistanceToNow(date, { locale: ptBR, addSuffix: true})}</span>
+        <span className="text-sm font-medium text-slate-500">{formatDistanceToNow(data.date, { locale: ptBR, addSuffix: true})}</span>
 
-        <p className="text-sm leading-6 text-slate-400">{content}</p>
+        <p className="text-sm leading-6 text-slate-400">{data.content}</p>
       </div>
 
-      <button className="w-full bg-slate-800 py-4 text-center text-sm-text-slate-300 outline-none font-medium group">
+      <button onClick={() => onNoteDeletion(data.id)} className="w-full bg-slate-800 py-4 text-center text-sm-text-slate-300 outline-none font-medium group">
         Deseja <span className="text-red-400 group-hover:underline">apagar essa nota?</span>
       </button>
     </NoteContent>
   </Dialog.Root>
   )
 
-export const NewNoteCard = () => {
-  const [isTextArea, setIsTextArea] = useState(true)
+export const NewNoteCard = ({ onNoteCreation }: NewNoteCardProps) => {
+  const [isTextArea, setIsTextArea] = useState(false)
   const [content, setContent] = useState('')
 
   const handleStartEditor = () => {
-    setIsTextArea(false)
+    setIsTextArea(true)
   }
  
   const handleContentChanged = (event: ChangeEvent<HTMLTextAreaElement>) => {
     setContent(event.target.value)
 
     if(event.target.value === '') {
-      setIsTextArea(true)
+      setIsTextArea(false)
     }
   }
 
   const handleSaveNote = (event: FormEvent) => {
     event.preventDefault()
 
-    console.log(content)
+    if(!content) {
+      toast.error('A nota não pode estar vazia.')
+      return
+    }
+
+    onNoteCreation({
+      id: crypto.randomUUID(),
+      date: new Date(),
+      content
+    })
+
+    setContent('')
+    setIsTextArea(false)
 
     toast.success('Nota criada com sucesso.')
   }
@@ -97,21 +115,24 @@ export const NewNoteCard = () => {
           Grave uma nota em áudio que será transcrita para texto automaticamente
         </p>
       </NoteTrigger>
-      <NoteContent onClose={() => setIsTextArea(true)}>
+      <NoteContent onClose={() => {
+        setIsTextArea(false)
+        setContent('')
+      }}>
         <form onSubmit={handleSaveNote} className="flex-1 flex flex-col">
           <div className="flex flex-1 flex-col gap-3 p-5">
             <span className="text-sm font-medium text-slate-500">Adicionar nota</span>
 
             {isTextArea ? (
-              <p className="text-sm leading-6 text-slate-400">
-                Comece <button className="text-cyan-400 font-medium hover:underline">gravando uma nota</button> em áudio ou se preferir utilize <button onClick={handleStartEditor} className="text-cyan-400 font-medium hover:underline">apenas texto</button>
-              </p>
-            ): (
               <textarea
                 autoFocus
                 className="text-sm leading-6 text-slate-400 bg-transparent resize-none flex-1 outline-none"
                 onChange={handleContentChanged}
-              />
+              />  
+            ): (
+              <p className="text-sm leading-6 text-slate-400">
+              Comece <button className="text-cyan-400 font-medium hover:underline">gravando uma nota</button> em áudio ou se preferir utilize <button onClick={handleStartEditor} className="text-cyan-400 font-medium hover:underline">apenas texto</button>
+              </p>
             )}
 
           </div>
