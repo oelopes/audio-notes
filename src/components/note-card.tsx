@@ -6,6 +6,7 @@ import { ChangeEvent, FormEvent, useState } from "react"
 import { toast } from "sonner"
 
 import { TNote } from "../types/notes"
+import { speechRecognition } from "../utils/speechRecognition"
 
 type BaseNoteProps = {
   children: React.ReactNode
@@ -71,6 +72,7 @@ export const NoteCard = ({data, onNoteDeletion}: NoteCardProps) =>  (
 
 export const NewNoteCard = ({ onNoteCreation }: NewNoteCardProps) => {
   const [isTextArea, setIsTextArea] = useState(false)
+  const [isRecording, setIsRecording] = useState(false)
   const [content, setContent] = useState('')
 
   const handleStartEditor = () => {
@@ -105,6 +107,35 @@ export const NewNoteCard = ({ onNoteCreation }: NewNoteCardProps) => {
     toast.success('Nota criada com sucesso.')
   }
 
+  const handleStartRecording = () => {
+    setIsRecording(true)
+    setIsTextArea(true)
+
+    speechRecognition.lang = 'pt-BR'
+    speechRecognition.continuous = true  // Doesn't stop recording when we stop talking
+    speechRecognition.maxAlternatives = 1 // Only shows the best alternative it finds for the spoken word
+    speechRecognition.interimResults = true // Gives results as we speak
+
+    speechRecognition.onresult = (event) => {
+      const transcription = Array.from(event.results).reduce((text, result) => {
+        return text.concat(result[0].transcript)
+      }, '')
+
+      setContent(transcription)
+    }
+
+    speechRecognition.onerror = (event) => {
+      console.error('ERROR: ', event)
+    }
+
+    speechRecognition.start()
+  }
+
+  const handleStopRecording = () => {
+    speechRecognition.stop()
+
+    setIsRecording(false)
+  }
 
   return (
     <Dialog.Root>
@@ -117,6 +148,7 @@ export const NewNoteCard = ({ onNoteCreation }: NewNoteCardProps) => {
       </NoteTrigger>
       <NoteContent onClose={() => {
         setIsTextArea(false)
+        setIsRecording(false)
         setContent('')
       }}>
         <form onSubmit={handleSaveNote} className="flex-1 flex flex-col">
@@ -128,18 +160,30 @@ export const NewNoteCard = ({ onNoteCreation }: NewNoteCardProps) => {
                 autoFocus
                 className="text-sm leading-6 text-slate-400 bg-transparent resize-none flex-1 outline-none"
                 onChange={handleContentChanged}
+                value={content}
               />  
             ): (
               <p className="text-sm leading-6 text-slate-400">
-              Comece <button className="text-cyan-400 font-medium hover:underline">gravando uma nota</button> em áudio ou se preferir utilize <button onClick={handleStartEditor} className="text-cyan-400 font-medium hover:underline">apenas texto</button>
+                Comece {' '} 
+                <button type="button" onClick={handleStartRecording} className="text-cyan-400 font-medium hover:underline">gravando uma nota</button> 
+                {' '} em áudio ou se preferir utilize {' '} 
+                <button type="button" onClick={handleStartEditor} className="text-cyan-400 font-medium hover:underline">apenas texto</button>
               </p>
             )}
-
           </div>
 
-          <button type="submit" className="w-full bg-cyan-400 py-4 text-center text-sm text-cyan-950 outline-none font-medium group hover:bg-cyan-500">
-            Salvar nota
-          </button>
+          {isRecording ? (
+            <button type="button" onClick={handleStopRecording} className="w-full flex items-center justify-center gap-2 bg-slate-900 py-4 text-center text-sm text-slate-300 outline-none font-medium group hover:text-slate-100">
+              <div className="size-3 rounded-full bg-red-500 animate-pulse" />
+              Gravando! (clique p/ interromper)
+            </button>
+          ) : (
+            <button type="button" onClick={handleSaveNote} className="w-full bg-cyan-400 py-4 text-center text-sm text-cyan-950 outline-none font-medium group hover:bg-cyan-500">
+              Salvar nota
+            </button>
+          )}
+
+          
         </form>
       </NoteContent>
     </Dialog.Root>
